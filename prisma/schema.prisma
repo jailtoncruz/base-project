@@ -1,0 +1,42 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider        = "prisma-client-js"
+  previewFeatures = ["views"]
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id              String              @id
+  name            String
+  cpf             String              @unique
+  phone           String
+  email           String              @unique
+  password        String
+  google_id       String?             @unique
+  role            UserRole            @default(User)
+  reset_passwords UserResetPassword[]
+
+  @@map("users")
+}
+
+enum UserRole {
+  User
+  Admin
+}
+
+model UserResetPassword {
+  id         String   @id
+  user_id    String
+  token      String   @unique
+  created_at DateTime @default(now())
+  expires_at DateTime
+  user       User     @relation(fields: [user_id], references: [id])
+
+  @@map("user_reset_passwords")
+}
