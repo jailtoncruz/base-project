@@ -1,22 +1,23 @@
-FROM node:18.16-alpine as build
+FROM node:20.7-alpine as build
 
 WORKDIR /app
-ENV NODE_ENV=production
 
 COPY . .
 
-RUN npm install -g @nestjs/cli npm@9.8.1 && \
-  npm install && npm run build
+RUN npm install -g @nestjs/cli npm@9.8.1 && npm install && npm run build
 
-FROM node:18.16-alpine
+FROM node:20.7-alpine
+USER node
 
 WORKDIR /app
 ENV NODE_ENV=production
 
-COPY --from=build /app/dist dist
-# COPY --from=build /app/prisma prisma
-COPY --from=build /app/package.json .
+COPY --chown=node:node --from=build /app/next.config.js next.config.js
+COPY --chown=node:node --from=build /app/dist dist
+COPY --chown=node:node --from=build /app/prisma prisma
+COPY --chown=node:node --from=build /app/package.json .
+COPY --chown=node:node --from=build /app/.next .next
 
-RUN npm install -g npm@9.8.1 && npm install --omit-dev
+RUN npm install --omit-dev && npm cache clean --force 
 
 CMD ["npm","run", "start:prod"]
